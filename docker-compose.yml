@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - my_postgres_data:/var/lib/postgresql/data
+    stop_grace_period: 60s   # 本番でもDB安全停止のため待機
+    restart: always          # 障害時に自動再起動
+
+  app:
+    build: ./app
+    container_name: python_app
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    command: python main.py
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: mydb
+      DB_USER: myuser
+      DB_PASS: mypassword
+    # restart: always          # アプリも障害時自動再起動
+
+volumes:
+  my_postgres_data:
+    name: my_postgres_data
